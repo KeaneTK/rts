@@ -6,6 +6,7 @@
 ".\objects\stm32f4xx_rcc.o"
 ".\objects\startup_stm32f40_41xxx.o"
 ".\objects\system_stm32f4xx.o"
+".\objects\stm32f4xx_tim.o"
 --ro-base 0x08000000 --entry 0x08000000 --rw-base 0x20000000 --entry Reset_Handler --first __Vectors --strict --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list ".\Listings\Test.map" -o .\Objects\Test.axf
