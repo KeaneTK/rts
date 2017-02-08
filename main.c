@@ -1,8 +1,8 @@
 #include "stm32f4xx.h"                  // Device header
 
 volatile uint32_t msTicks;                      // counts 1ms timeTicks      
-int half = 80000;
 
+//Copied from the included Blinky schedule
 void Delay (uint32_t dlyTicks) {                                              
   uint32_t curTicks;
 
@@ -10,30 +10,49 @@ void Delay (uint32_t dlyTicks) {
   while ((msTicks - curTicks) < dlyTicks);
 }
 
+//Copied from the included Blinky schedule
 void SysTick_Handler(void) {
   msTicks++;
 }
 
+//Detects single and double clicks
+//Returns one of three values
+// 0 - No click detected
+// 1 - A single click
+// 2 - A double click
 int click() {
 	uint8_t last_pin;
 	uint8_t button_pin;
 	uint32_t curTicks;
 	int value = 0;
 	int zeroes = 0;
+	int one = 0;
+	
 	curTicks = msTicks;
 	
-	button_pin = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0);
-	if (button_pin == 1) {
-		while ((msTicks - curTicks) < 750) {
+	//Need some leeway in detecting the first click
+	while ((msTicks - curTicks) < 100) {
+		button_pin = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0);
+		if (button_pin == 1) {
+			one = 1;
+		}
+	}
+	//If there is a single click, start to detect for a second click
+	if (one == 1) {
+		button_pin = one;
+		while ((msTicks - curTicks) < 650) {
 			last_pin = button_pin;
 			button_pin = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0);
+			//Make sure there is some zeroes in between each click to prevent 'scrubbing'
 			if (button_pin == 0) {
 				zeroes++;
 			}
+			//Double click - Make sure there was a second click and a number of zeroes
 			if (last_pin == 0 && button_pin == 1 && zeroes > 150) {
 				value = 2;
 			}
 		}
+		//Single Click - If there was one click, but not two
 		if (value != 2) {
 			value = 1;
 		}
@@ -42,9 +61,10 @@ int click() {
 	return value;
 }
 
+//Initial startup animation
 void startSpinner() {
 	int counter = 0;
-	while (counter < 3) {
+	for (counter = 0; counter < 3; counter++) {
 		GPIO_ResetBits(GPIOD, GPIO_Pin_14);
 		GPIO_SetBits(GPIOD, GPIO_Pin_12);
 		Delay(250);
@@ -57,7 +77,6 @@ void startSpinner() {
 		GPIO_ResetBits(GPIOD, GPIO_Pin_13);
 		GPIO_SetBits(GPIOD, GPIO_Pin_15);
 		Delay(250);
-		counter++;
 	}
 	GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 }
