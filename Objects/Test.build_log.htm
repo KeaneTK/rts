@@ -28,10 +28,31 @@ Project File Date:  02/06/2017
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Target 1'
 compiling main.c...
+main.c(210): warning:  #177-D: variable "coffeeSelect"  was declared but never referenced
+  	int coffeeSelect = 0;
+main.c(211): warning:  #177-D: variable "ledExpresso"  was declared but never referenced
+  	uint32_t ledExpresso = GPIO_Pin_12;
+main.c(212): warning:  #177-D: variable "ledLatte"  was declared but never referenced
+  	uint32_t ledLatte = GPIO_Pin_13;
+main.c(213): warning:  #177-D: variable "ledMocha"  was declared but never referenced
+  	uint32_t ledMocha = GPIO_Pin_14;
+main.c(214): warning:  #177-D: variable "ledDecaf"  was declared but never referenced
+  	uint32_t ledDecaf = GPIO_Pin_15;
+main.c(219): warning:  #177-D: variable "timeExpresso"  was declared but never referenced
+  	int timeExpresso = 3;
+main.c(220): warning:  #177-D: variable "timeLatte"  was declared but never referenced
+  	int timeLatte = 4;
+main.c(221): warning:  #177-D: variable "timeMocha"  was declared but never referenced
+  	int timeMocha = 5;
+main.c(222): warning:  #177-D: variable "timeDecaf"  was declared but never referenced
+  	int timeDecaf = 6;
+main.c(223): warning:  #177-D: variable "clickValue"  was declared but never referenced
+  	int clickValue = 0;
+main.c: 10 warnings, 0 errors
 linking...
-Program Size: Code=2244 RO-data=424 RW-data=16 ZI-data=1648  
+Program Size: Code=2860 RO-data=424 RW-data=32 ZI-data=1632  
 FromELF: creating hex file...
-".\Objects\Test.axf" - 0 Error(s), 0 Warning(s).
+".\Objects\Test.axf" - 0 Error(s), 10 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -48,9 +69,11 @@ Package Vendor: Keil
                 STMicroelectronics STM32F4 Series Device Support, Drivers and Examples
    * Component: Startup Version: 1.3.1
    * Component: Framework Version: 1.3.1
+   * Component: EXTI Version: 1.3.0
    * Component: GPIO Version: 1.3.0
    * Component: RCC Version: 1.3.0
    * Component: TIM Version: 1.3.0
+   * Component: SYSCFG Version: 1.3.0
 
 <h2>Collection of Component include folders:</h2>
   C:\Users\Default\Desktop\Test\RTE\Device\STM32F407VG
@@ -81,6 +104,10 @@ Package Vendor: Keil
       Source file:   Device\StdPeriph_Driver\templates\stm32f4xx_it.c
       Include file:  Device\StdPeriph_Driver\templates\stm32f4xx_it.h
 
+   * Component: Keil::Device:StdPeriph Drivers:EXTI:1.3.0
+      Source file:   Device\StdPeriph_Driver\src\stm32f4xx_exti.c
+      Include file:  Device\StdPeriph_Driver\inc\stm32f4xx_exti.h
+
    * Component: Keil::Device:StdPeriph Drivers:GPIO:1.3.0
       Include file:  Device\StdPeriph_Driver\inc\stm32f4xx_gpio.h
       Source file:   Device\StdPeriph_Driver\src\stm32f4xx_gpio.c
@@ -92,7 +119,11 @@ Package Vendor: Keil
    * Component: Keil::Device:StdPeriph Drivers:TIM:1.3.0
       Include file:  Device\StdPeriph_Driver\inc\stm32f4xx_tim.h
       Source file:   Device\StdPeriph_Driver\src\stm32f4xx_tim.c
-Build Time Elapsed:  00:00:01
+
+   * Component: Keil::Device:StdPeriph Drivers:SYSCFG:1.3.0
+      Include file:  Device\StdPeriph_Driver\inc\stm32f4xx_syscfg.h
+      Source file:   Device\StdPeriph_Driver\src\stm32f4xx_syscfg.c
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>
