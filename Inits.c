@@ -1,6 +1,6 @@
 #include "inits.h"
 #include "stm32f4xx.h" 
-#include "stm32f4xx_tim.h"              // Keil::Device:StdPeriph Drivers:TIM
+#include "stm32f4xx_tim.h"
 #include "stm32f4xx_syscfg.h"
 #include "stm32f4xx_exti.h"   
 
@@ -26,13 +26,13 @@ void EnableEXTIInterrupt() {
 	NVIC_Init(&nvicStructure);
 }
 
-void InitTimers() {                 // Device header
+void InitTimers() {
 	TIM_TimeBaseInitTypeDef timer_InitStructure;
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-      //(timer base clock / (prescaler + 1) ) / (period + 1) = the hertz or ticks per second
+
   timer_InitStructure.TIM_Prescaler = 84-1;
-  timer_InitStructure.TIM_CounterMode = TIM_CounterMode_Up;//UP = 0++, Down = x--
-  timer_InitStructure.TIM_Period = 1000000-1;//number of ticks, before it resets itself
+  timer_InitStructure.TIM_CounterMode = TIM_CounterMode_Up;
+  timer_InitStructure.TIM_Period = 1000000-1;
   timer_InitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   timer_InitStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM2, &timer_InitStructure);
@@ -55,7 +55,6 @@ void InitLeds() {
 	GPIO_InitTypeDef GPIO_Initstructure;
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE); 
 
-	//LED Configuration
 	GPIO_Initstructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_Initstructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_Initstructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -67,7 +66,7 @@ void InitLeds() {
 void InitButtons() {
 	GPIO_InitTypeDef GPIO_Initstructure;
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE); 
-	//Button Configuration
+
 	GPIO_Initstructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_Initstructure.GPIO_OType = GPIO_OType_PP;  
 	GPIO_Initstructure.GPIO_Pin = GPIO_Pin_0;

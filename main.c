@@ -1,19 +1,27 @@
-#include "stm32f4xx.h"                  // Device header
+#include "stm32f4xx.h"
 #include "inits.h"
-#include "stm32f4xx_tim.h"              // Keil::Device:StdPeriph Drivers:TIM
+#include "stm32f4xx_tim.h"
 #include "stm32f4xx_syscfg.h"
-#include "stm32f4xx_exti.h"   
+#include "stm32f4xx_exti.h"
 
-int timerCurr = 70;
-int timerTotal = 60;
-int loopCounter = 5;
+//
+int timerCurr = 0;
+//
+int timerTotal = 0;
+//
+int loopCounter = 0;
+//
 int ledCounter = 0;
+//
 int ledCurr;
+//
 int buttonPresses = 0;
+//
 int clickMode = 0;
+//
 int coffeeSelection = 0;
 
-
+//Changes the coffee selection LED
 int selector (int counter) {
 	if (counter > 3) {
 		counter = 0;
@@ -36,6 +44,7 @@ int selector (int counter) {
 	return counter;
 }
 
+//Enables the coffeeTimer with the proper values
 void initCountdown(int time, uint32_t led) {
 	ledCurr = led;
 	timerTotal = time;
@@ -44,6 +53,7 @@ void initCountdown(int time, uint32_t led) {
 	TIM_Cmd(TIM2, ENABLE);
 }
 
+//Detects single or double click, then, depending on the mode, activates the proper function
 void click() {
 	int buttonValue = 0;
 	if (buttonPresses > 0) {
@@ -62,7 +72,7 @@ void click() {
 			} else if (buttonValue == 2) {
 				switch (coffeeSelection) {
 					case 0: initCountdown(30, GPIO_Pin_12); break;
-					case 1: initCountdown(40, GPIO_Pin_13); break;
+					case 1: initCountdown(6, GPIO_Pin_13); break;
 					case 2: initCountdown(45, GPIO_Pin_14); break;
 					case 3: initCountdown(35, GPIO_Pin_15); break;
 				}
@@ -75,12 +85,14 @@ void click() {
 			 } else if (buttonValue == 2) {
 				 TIM_Cmd(TIM2, DISABLE); 
 				 clickMode = 0;
+				 GPIO_SetBits(GPIOD, ledCurr);
 			 }
 		}
 		TIM_Cmd(TIM5, DISABLE);
 	}
 }
 
+//Startup animation spinner
 void startup() {
 	if (loopCounter < 3) {
 		if (ledCounter == 0) {
@@ -114,7 +126,7 @@ void startup() {
 	}
 }
 
-//Initial startup animation
+//Initial startup animation and handles click timing
 void TIM5_IRQHandler() {
 	if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET) {
 		TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
@@ -126,7 +138,7 @@ void TIM5_IRQHandler() {
 	}
 }
 
-//This handles the blinking and audio
+//Timer handler for coffeeTimer blinking and audio
 void TIM2_IRQHandler() {
 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
@@ -135,32 +147,35 @@ void TIM2_IRQHandler() {
 			timerCurr++;
 		} else {
 			TIM_Cmd(TIM2, DISABLE);
+			GPIO_SetBits(GPIOD, ledCurr);
+			clickMode = 0;
 			//play sound
 		}
 	}
 }
 
+//Button handler
 void EXTI0_IRQHandler() {
 	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
+		if (buttonPresses == 0) {
+				TIM_Cmd(TIM5, ENABLE);
+		}
 		buttonPresses++;
 		EXTI_ClearITPendingBit(EXTI_Line0);
-		TIM_Cmd(TIM5, ENABLE);
 	}
 }
 
 int main()
 {	
-	int restart = 1;
 	InitButtons();
 	InitLeds();
 	InitTimers();
 	EnableTimerInterrupt();
 	InitEXTI();
 	EnableEXTIInterrupt();
-	loopCounter = 0;
 	
 	while(1){
-		//this is to make sure the main program runs after the startup animation is done
+		//this is to make sure the main program runs after the startup animation is done, then start the selection loop
 		if (loopCounter == 4) {
 			selector(coffeeSelection);
 			loopCounter = 5;
