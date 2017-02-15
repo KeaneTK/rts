@@ -1,6 +1,8 @@
 #include "inits.h"
 #include "stm32f4xx.h" 
-#include "stm32f4xx_exti.h"             // Keil::Device:StdPeriph Drivers:EXTI
+#include "stm32f4xx_tim.h"              // Keil::Device:StdPeriph Drivers:TIM
+#include "stm32f4xx_syscfg.h"
+#include "stm32f4xx_exti.h"   
 
 void InitEXTI() {
 	EXTI_InitTypeDef EXTI_InitStructure;
