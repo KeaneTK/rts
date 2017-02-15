@@ -30,9 +30,9 @@ void InitTimers() {                 // Device header
 	TIM_TimeBaseInitTypeDef timer_InitStructure;
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
       //(timer base clock / (prescaler + 1) ) / (period + 1) = the hertz or ticks per second
-  timer_InitStructure.TIM_Prescaler = 14000-1;
+  timer_InitStructure.TIM_Prescaler = 84-1;
   timer_InitStructure.TIM_CounterMode = TIM_CounterMode_Up;//UP = 0++, Down = x--
-  timer_InitStructure.TIM_Period = 2000-1;//number of ticks, before it resets itself
+  timer_InitStructure.TIM_Period = 1000000-1;//number of ticks, before it resets itself
   timer_InitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   timer_InitStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM2, &timer_InitStructure);
@@ -40,9 +40,9 @@ void InitTimers() {                 // Device header
 	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
 	
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
-  timer_InitStructure.TIM_Prescaler = 21000-1;
+  timer_InitStructure.TIM_Prescaler = 42-1;
   timer_InitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  timer_InitStructure.TIM_Period = 500-1;
+  timer_InitStructure.TIM_Period = 1000000-1;
   timer_InitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   timer_InitStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM5, &timer_InitStructure);
