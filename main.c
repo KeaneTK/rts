@@ -184,7 +184,7 @@ void TIM2_IRQHandler() {
 			TIM_Cmd(TIM2, DISABLE);
 			GPIO_SetBits(GPIOD, ledCurr);
 			clickMode = 0;
-			//play sound
+			playSound();
 		}
 	}
 }
@@ -286,8 +286,8 @@ int main()
 	
 	//init sound variables
 	InitSound();
-	for (x = 0; x < 5; x++) 
-		playSound();
+	//for (x = 0; x < 5; x++) 
+	//	playSound();
 
 	while(1){
 		//this is to make sure the main program runs after the startup animation is done, then start the selection loop

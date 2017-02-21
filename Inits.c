@@ -20,7 +20,7 @@ void InitEXTI() {
 void EnableEXTIInterrupt() {
 	NVIC_InitTypeDef nvicStructure;
 	nvicStructure.NVIC_IRQChannel = EXTI0_IRQn;
-	nvicStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	nvicStructure.NVIC_IRQChannelPreemptionPriority = 1;
 	nvicStructure.NVIC_IRQChannelSubPriority = 0;
 	nvicStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&nvicStructure);
@@ -48,7 +48,6 @@ void InitTimers() {
   TIM_TimeBaseInit(TIM5, &timer_InitStructure);
   TIM_Cmd(TIM5, ENABLE);
 	TIM_ITConfig(TIM5, TIM_IT_Update, ENABLE);
-	
 }
 
 void InitLeds() {
@@ -76,18 +75,20 @@ void InitButtons() {
 }
 
 void EnableTimerInterrupt() {
-	NVIC_InitTypeDef nvicStructure;
+	NVIC_InitTypeDef nvicStructure, nvicStructure2;
+	NVIC_SetPriorityGrouping(NVIC_PriorityGroup_1);
+	
 	nvicStructure.NVIC_IRQChannel = TIM2_IRQn;
-	nvicStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	nvicStructure.NVIC_IRQChannelSubPriority = 2;
+	nvicStructure.NVIC_IRQChannelPreemptionPriority = 2;
+	nvicStructure.NVIC_IRQChannelSubPriority = 0;
 	nvicStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&nvicStructure);
 	
-	nvicStructure.NVIC_IRQChannel = TIM5_IRQn;
-	nvicStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	nvicStructure.NVIC_IRQChannelSubPriority = 1;
-	nvicStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&nvicStructure);
+	nvicStructure2.NVIC_IRQChannel = TIM5_IRQn;
+	nvicStructure2.NVIC_IRQChannelPreemptionPriority = 3;
+	nvicStructure2.NVIC_IRQChannelSubPriority = 0;
+	nvicStructure2.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&nvicStructure2);
 }
 
 
