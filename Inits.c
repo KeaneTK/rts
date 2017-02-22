@@ -40,11 +40,11 @@ void InitTimers() {
   TIM_TimeBaseInit(TIM2, &timer_InitStructure);
   
 	
-	//set timer5 to 2 kHz
+	//set timer5 to 1 kHz
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
   timer_InitStructure.TIM_Prescaler = 84 - 1;
   timer_InitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  timer_InitStructure.TIM_Period = 500 - 1;
+  timer_InitStructure.TIM_Period = 1000 - 1;
   timer_InitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   timer_InitStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM5, &timer_InitStructure);

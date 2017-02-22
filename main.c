@@ -1,3 +1,9 @@
+/*
+	Sound code was taken from the Sound.zip file provided.
+	
+*/
+
+
 #include "inits.h"
 #include "stm32f4xx.h"                  // Device header
 #include "stm32f4xx_gpio.h"             // Keil::Device:StdPeriph Drivers:GPIO
@@ -6,41 +12,42 @@
 #include "stm32f4xx_exti.h"             // Keil::Device:StdPeriph Drivers:EXTI
 #include "codec.h"
 
-
-
 //constants for brewing times
-#define TIME_ESPRESSO 30
-#define TIME_LATTE 40
-#define TIME_MOCHA 45
+//	Program set in milliseconds, so multiply by 1000
+#define TIME_ESPRESSO 30 * 1000
+#define TIME_LATTE 40 * 1000
+#define TIME_MOCHA 45 * 1000
+#define TIME_CAPPACCINO 60 * 1000
+
+//easier way to remember the colored LEDs
+#define LED_GREEN GPIO_Pin_12
+#define LED_ORANGE GPIO_Pin_13
+#define LED_RED GPIO_Pin_14
+#define LED_BLUE GPIO_Pin_15
+
 
 
 int timer2_Elapsed = 0;
 int timer5_Elapsed = 0;
-//
-int timerCurr = 0;
-//
-int timerTotal = 0;
-//
 int loopCounter = 0;
-//
 int ledCounter = 0;
-//
+
+//variables for tracking the current mode the program is in
 int ledCurr;
-//
+int currBrewTime;
+int brewingTimeElapsed = 0;
+int programRunning = 0;
+int coffeeSelection = 0;
+
+//variables for determing single/double/long presses
 int buttonPresses = 0;
-//
 int buttonHeld = 0;
 int buttonHoldTime = 0;
-int programRunning = 0;
 int buttonOperationCompleted = 0;
-//
-int clickMode = 0;
-//
-int coffeeSelection = 0;
 
 //--------------sound variables---------------
 
-int x;
+#define SECONDS_TO_PLAY_SOUND 2	//how long to play the sound that indicates end of brewing
 
 #define NOTEFREQUENCY 0.015		//frequency of saw wave: f0 = 0.5 * NOTEFREQUENCY * 48000 (=sample rate)
 #define NOTEAMPLITUDE 500.0		//amplitude of the saw wave
@@ -67,154 +74,135 @@ void clickLong(void);
 void clickSingle(void);
 void clickDouble(void);
 
+void blinkLed(void);
+void initCountdown(void);
+void finishedBrewing(void);
 
-//Changes the coffee selection LED
+
+//Force change the LED color (reset/set) and store the current mode
+//	is ONLY called by single clicks IF the program is not running
 int selector (int counter) {
 	if (counter > 3) {
 		counter = 0;
 	}
-	GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+	GPIO_ResetBits(GPIOD, LED_GREEN | LED_ORANGE | LED_RED | LED_BLUE);
 	switch (counter) {
 		case 0:
-			GPIO_SetBits(GPIOD, GPIO_Pin_12);
+			GPIO_SetBits(GPIOD, LED_GREEN);
+			ledCurr = LED_GREEN;
+			currBrewTime = TIME_ESPRESSO;
 			break;
 		case 1:
-			GPIO_SetBits(GPIOD, GPIO_Pin_13);
+			GPIO_SetBits(GPIOD, LED_ORANGE);
+			ledCurr = LED_ORANGE;
+			currBrewTime = TIME_LATTE;
 			break;
 		case 2:
-			GPIO_SetBits(GPIOD, GPIO_Pin_14);
+			GPIO_SetBits(GPIOD, LED_RED);
+			ledCurr = LED_RED;
+			currBrewTime = TIME_MOCHA;
 			break;
 		case 3:
-			GPIO_SetBits(GPIOD, GPIO_Pin_15);
+			GPIO_SetBits(GPIOD, LED_BLUE);
+			ledCurr = LED_BLUE;
+			currBrewTime = TIME_CAPPACCINO;
 			break;
 	}
 	return counter;
 }
 
+void blinkLed() {
+	GPIO_ToggleBits(GPIOD, ledCurr);
+}
+
 //Enables the coffeeTimer with the proper values
-void initCountdown(int time, uint32_t led) {
-	ledCurr = led;
-	timerTotal = time;
-	timerCurr = 0;
-	clickMode = 1;
-	TIM_Cmd(TIM2, ENABLE);
+void initCountdown() {
+	brewingTimeElapsed = 0;
+	programRunning = 1;
 }
 
+//resets variables when program is done
+void finishedBrewing() {
+	programRunning = 0;
+	playSound(SECONDS_TO_PLAY_SOUND);
+}
 
+//start the program
 void clickLong() {
-	
-}
-
-void clickDouble() {
-	
-}
-
-void clickSingle() {
-		playSound(2);
-}
-
-//Detects single or double click, then, depending on the mode, activates the proper function
-//LOGIC:
-//	Interrupt on button sets buttonHeld = 1
-//	click is called by interrupt
-//	
-void click() {
-	int buttonValue = 0;
-	if (!(buttonHeld == 1)) {
-		//single click
-		if (buttonPresses > 0) {
-			//Program is in selector mode
-			if (clickMode == 0) {
-				if (buttonValue == 1) {
-					coffeeSelection++;
-					coffeeSelection = selector(coffeeSelection);
-				} else if (buttonValue == 2) {
-					switch (coffeeSelection) {
-						case 0: initCountdown(30, GPIO_Pin_12); break;
-						case 1: initCountdown(6, GPIO_Pin_13); break;
-						case 2: initCountdown(45, GPIO_Pin_14); break;
-						case 3: initCountdown(35, GPIO_Pin_15); break;
-					}
-				}
-			}
-			//Program is in timer mode
-			else if (clickMode == 1) {
-				 if (buttonValue == 1) {
-					 timerCurr = 0;
-				 } else if (buttonValue == 2) {
-					 TIM_Cmd(TIM2, DISABLE); 
-					 clickMode = 0;
-					 GPIO_SetBits(GPIOD, ledCurr);
-				 }
-			}
-			TIM_Cmd(TIM5, DISABLE);
-		}
-}
-}
-
-//Startup animation spinner
-void startup() {
-	if (loopCounter < 3) {
-		if (ledCounter == 0) {
-			GPIO_ResetBits(GPIOD, GPIO_Pin_14);
-			GPIO_SetBits(GPIOD, GPIO_Pin_12);
-			ledCounter++;
-		} else if (ledCounter == 1) {
-			GPIO_ResetBits(GPIOD, GPIO_Pin_15);
-			GPIO_SetBits(GPIOD, GPIO_Pin_13);
-			ledCounter++;
-		} else if (ledCounter == 2) {
-			GPIO_ResetBits(GPIOD, GPIO_Pin_12);
-			GPIO_SetBits(GPIOD, GPIO_Pin_14);
-			ledCounter++;
-		} else if (ledCounter == 3) {
-			GPIO_ResetBits(GPIOD, GPIO_Pin_13);
-			GPIO_SetBits(GPIOD, GPIO_Pin_15);
-			ledCounter = 0;
-			loopCounter++;
-		}
-	} else if (loopCounter == 3) {
-		if (ledCounter == 0) {
-			GPIO_ResetBits(GPIOD, GPIO_Pin_14);
-			ledCounter++;
-		} else if (ledCounter == 1) {
-			GPIO_ResetBits(GPIOD, GPIO_Pin_15);
-			ledCounter = 0;
-			loopCounter++;
-			TIM_Cmd(TIM5, DISABLE);
-		}
+	if (programRunning == 0) {		
+		switch (coffeeSelection) {
+			case 0: 
+				initCountdown(); 
+				break;
+			case 1: 
+				initCountdown(); 
+				break;
+			case 2: 
+				initCountdown(); 
+				break;
+			case 3: 
+				initCountdown(); 
+				break;
+		}	
 	}
 }
 
-//Initial startup animation and handles click timing
+//Reset the program if its running
+//	return to menu
+void clickDouble() {
+	if (programRunning == 1) {
+		programRunning = 0;
+		GPIO_SetBits(GPIOD, ledCurr);
+	}
+
+}
+
+//If program is running:
+//	Do nothing
+//else:
+//	Cycle LED
+void clickSingle() {
+	//Program is in selector mode
+	if (programRunning == 0) {
+		coffeeSelection++;
+		coffeeSelection = selector(coffeeSelection);
+	} else if (programRunning == 1) {
+		//reset the brewing time
+		brewingTimeElapsed = 0;
+	}
+}
+
+
 //set to 1000 updates per second (1 kHz)
 //	runs all the time 
 void TIM5_IRQHandler() {
 	if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET) {
 		TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 		timer5_Elapsed++;
-		
-		//see if 1 second has passed
-		if (timer5_Elapsed % 1000 == 0) {
-			
-		}
+		if (timer5_Elapsed >= (600 * 1000)) 
+			timer5_Elapsed = 0;
 		
 		if (programRunning == 1) {
-			if (timer5_Elapsed % 1000 == 0) {
-				//1 second elapsed
+			//update the brewing time
+			brewingTimeElapsed++;
+			//only execute if a half second has passed (blink = on + off)
+			if (timer5_Elapsed % 500 == 0) {
 				//reset the counter to avoid integer overflow
-				timer5_Elapsed = 0;
-				//see if we need to disable the coffee timer
-				if (timerCurr < timerTotal) {
-					GPIO_ToggleBits(GPIOD, ledCurr);
-					timerCurr++;
-				} else{
-					GPIO_SetBits(GPIOD, ledCurr);
-					clickMode = 0;
-					//play sound
+				
+				//check the status of the program
+				if (brewingTimeElapsed >= currBrewTime) {
+					//finished brewing, play a sound
+					finishedBrewing();
+				} else {
+					//program is running and this is still brewing,
+					//	therefore blink LED
+					blinkLed();
 				}
 			}
 		}
+		
+		
+		
 	}
 }
 
@@ -239,20 +227,20 @@ void TIM2_IRQHandler() {
 		//		Do: double click
 		if (buttonPresses > 0 && buttonOperationCompleted == 0) {			
 			if (buttonHoldTime >= 1500 && GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0) == 1) {	//Case 1
-				clickLong();
 				buttonHoldTime = 0;
 				buttonPresses = 0;
 				buttonOperationCompleted = 1;
+				clickLong();
 			} else if (buttonPresses >= 2 && timer2_Elapsed <= 500) {												//Case 3
-				clickDouble();
 				buttonHoldTime = 0;
 				buttonPresses = 0;					
 				buttonOperationCompleted = 1;
+				clickDouble();
 			} else if (buttonPresses == 1 && timer2_Elapsed > 500 && GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0) == 0) {			//Case 2
-				clickSingle();
 				buttonHoldTime = 0;
 				buttonPresses = 0;
 				buttonOperationCompleted = 1;
+				clickSingle();
 			}
 		}	
 		
@@ -266,9 +254,6 @@ void TIM2_IRQHandler() {
 }
 
 //Button handler
-//LOGIC:
-//	
-//	
 void EXTI0_IRQHandler() {
 	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
 		//tell the timer that the button is being held down
@@ -391,8 +376,10 @@ int main()
 	InitSound();
 	
 	
+	//Set the LED once
+	selector(coffeeSelection);
+	
 	while(1){
-		selector(coffeeSelection);
-		loopCounter = 5;	
+			
 	}
 }
