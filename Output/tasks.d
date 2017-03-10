@@ -41,6 +41,7 @@
 .\output\tasks.o: .\Libraries\STM32F4xx_StdPeriph_Driver\inc\misc.h
 .\output\tasks.o: .\FreeRTOS\include\projdefs.h
 .\output\tasks.o: .\FreeRTOS\include\portable.h
+.\output\tasks.o: .\FreeRTOS\include\deprecated_definitions.h
 .\output\tasks.o: .\FreeRTOS\portable\RVDS\ARM_CM4F\portmacro.h
 .\output\tasks.o: .\FreeRTOS\include\mpu_wrappers.h
 .\output\tasks.o: .\FreeRTOS\include\task.h

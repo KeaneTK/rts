@@ -28,22 +28,15 @@ Project File Date:  02/27/2017
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'freertos_project'
 compiling main.c...
-Source\main.c(91): warning:  #186-D: pointless comparison of unsigned integer with zero
-  	if( ulCount >= totalTime ) {
-Source\main.c(96): warning:  #223-D: function "vTimerSetTimerID" declared implicitly
-  		vTimerSetTimerID( xTimer, ( void * ) 0 );
-Source\main.c(102): warning:  #223-D: function "vTimerSetTimerID" declared implicitly
-  		vTimerSetTimerID( xTimer, ( void * ) ulCount );
-Source\main.c: 3 warnings, 0 errors
+Source\main.c(89): warning:  #188-D: enumerated type mixed with another type
+  		STM_EVAL_LEDOn(led_coffee);
+Source\main.c(94): warning:  #188-D: enumerated type mixed with another type
+  		STM_EVAL_LEDToggle(led_coffee);
+Source\main.c: 2 warnings, 0 errors
 linking...
-.\Output\freertos_project.axf: Error: L6218E: Undefined symbol vCappaccino (referred from main.o).
-.\Output\freertos_project.axf: Error: L6218E: Undefined symbol vExpresso (referred from main.o).
-.\Output\freertos_project.axf: Error: L6218E: Undefined symbol vLatte (referred from main.o).
-.\Output\freertos_project.axf: Error: L6218E: Undefined symbol vMocha (referred from main.o).
-.\Output\freertos_project.axf: Error: L6218E: Undefined symbol vTimerSetTimerID (referred from main.o).
-Not enough information to list image symbols.
-Finished: 1 information, 0 warning and 5 error messages.
-".\Output\freertos_project.axf" - 5 Error(s), 3 Warning(s).
+Program Size: Code=18268 RO-data=488 RW-data=204 ZI-data=78740  
+FromELF: creating hex file...
+".\Output\freertos_project.axf" - 0 Error(s), 2 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -61,7 +54,6 @@ Package Vendor: ARM
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.0.0
-Target not created.
 Build Time Elapsed:  00:00:02
 </pre>
 </body>

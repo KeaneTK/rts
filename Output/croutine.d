@@ -39,8 +39,10 @@
 .\output\croutine.o: .\Libraries\STM32F4xx_StdPeriph_Driver\inc\misc.h
 .\output\croutine.o: .\FreeRTOS\include\projdefs.h
 .\output\croutine.o: .\FreeRTOS\include\portable.h
+.\output\croutine.o: .\FreeRTOS\include\deprecated_definitions.h
 .\output\croutine.o: .\FreeRTOS\portable\RVDS\ARM_CM4F\portmacro.h
 .\output\croutine.o: .\FreeRTOS\include\mpu_wrappers.h
 .\output\croutine.o: .\FreeRTOS\include\task.h
 .\output\croutine.o: .\FreeRTOS\include\list.h
 .\output\croutine.o: .\FreeRTOS\include\croutine.h
+.\output\croutine.o: .\FreeRTOS\include\list.h

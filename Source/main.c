@@ -11,15 +11,17 @@
 #include "croutine.h"
 #include "timers.h"
 //******************************************************************************
-#define TIME_ESPRESSO 30000
-#define TIME_LATTE 40000
-#define TIME_MOCHA 45000
-#define TIME_CAPPACCINO 60000
+#define TIME_ESPRESSO 5 
+#define TIME_LATTE 40
+#define TIME_MOCHA 45
+#define TIME_CAPPACCINO 10
 
 int totalTime = 0;
 int led_coffee;
 void vTimerCallback( TimerHandle_t xTimer );
+void secondTask(void* ptr);
 TimerHandle_t coffeeTimer; 
+int test = 0;
 //void Delay(uint32_t val);
 
 #define STACK_SIZE_MIN	128	/* usStackDepth	- the stack size DEFINED IN WORDS.*/
@@ -49,18 +51,32 @@ int main(void)
 	STM_EVAL_LEDInit(LED_ORANGE);
 	STM_EVAL_LEDInit(LED_RED);
 	
-//	xTaskCreate( vMocha, (const char*)"Mocha", 
-//		STACK_SIZE_MIN, NULL, tskIDLE_PRIORITY, NULL );
+	xTaskCreate( secondTask, (const char*)"Mocha", STACK_SIZE_MIN, NULL, tskIDLE_PRIORITY, NULL );
 	
-	coffeeTimer = xTimerCreate("timerCoffee", pdMS_TO_TICKS(1), pdTRUE, (void *) 0, vTimerCallback);
-	vTaskStartScheduler();
+	//params(char* not used, pdMS_TO_TICKS(#numberOfMilliseconds), true if you want the timer to repeat, can be used to store int values, function called after timer stops)
+	coffeeTimer = xTimerCreate("timerCoffee", pdMS_TO_TICKS(1000), pdTRUE, (void *) 0, vTimerCallback);
 	
 	totalTime = TIME_CAPPACCINO;
+	led_coffee = LED_GREEN;
 	xTimerStart(coffeeTimer, 0); 
-	for(;;) { } 
+	
+	vTaskStartScheduler();
+	for(;;) {
+	} 
 }
 
 //maybe have four different tasks/timers for the four different coffees
+
+void secondTask(void * ptr) {
+	for(;;) {
+		if (test >= TIME_CAPPACCINO) {
+			test = 0;
+			led_coffee = LED_ORANGE;
+			totalTime = TIME_ESPRESSO;
+			xTimerReset(coffeeTimer, 0);
+		}
+	}
+}
 
 void vTimerCallback( TimerHandle_t xTimer ) {
 	uint32_t ulCount;
@@ -68,14 +84,15 @@ void vTimerCallback( TimerHandle_t xTimer ) {
 	ulCount = ( uint32_t ) pvTimerGetTimerID( xTimer );
 
 	ulCount++;
+	test++;
 	if( ulCount >= totalTime ) {
 		STM_EVAL_LEDOn(led_coffee);
 		xTimerStop( xTimer, 0 );
-		//vTimerSetTimerID( xTimer, ( void * ) 0 );
+		vTimerSetTimerID( xTimer, ( void * ) 0 );
 	}
 	else { 
 		STM_EVAL_LEDToggle(led_coffee);
-		//vTimerSetTimerID( xTimer, ( void * ) ulCount );
+		vTimerSetTimerID( xTimer, ( void * ) ulCount );
 	}
 }
 

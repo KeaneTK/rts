@@ -40,6 +40,7 @@
 .\output\event_groups.o: .\Libraries\STM32F4xx_StdPeriph_Driver\inc\misc.h
 .\output\event_groups.o: .\FreeRTOS\include\projdefs.h
 .\output\event_groups.o: .\FreeRTOS\include\portable.h
+.\output\event_groups.o: .\FreeRTOS\include\deprecated_definitions.h
 .\output\event_groups.o: .\FreeRTOS\portable\RVDS\ARM_CM4F\portmacro.h
 .\output\event_groups.o: .\FreeRTOS\include\mpu_wrappers.h
 .\output\event_groups.o: .\FreeRTOS\include\task.h

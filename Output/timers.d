@@ -40,6 +40,7 @@
 .\output\timers.o: .\Libraries\STM32F4xx_StdPeriph_Driver\inc\misc.h
 .\output\timers.o: .\FreeRTOS\include\projdefs.h
 .\output\timers.o: .\FreeRTOS\include\portable.h
+.\output\timers.o: .\FreeRTOS\include\deprecated_definitions.h
 .\output\timers.o: .\FreeRTOS\portable\RVDS\ARM_CM4F\portmacro.h
 .\output\timers.o: .\FreeRTOS\include\mpu_wrappers.h
 .\output\timers.o: .\FreeRTOS\include\task.h
