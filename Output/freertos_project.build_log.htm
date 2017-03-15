@@ -28,20 +28,13 @@ Project File Date:  02/27/2017
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'freertos_project'
 compiling main.c...
-Source\main.c(116): warning:  #188-D: enumerated type mixed with another type
-  		STM_EVAL_LEDOn(led_coffee1);
-Source\main.c(121): warning:  #188-D: enumerated type mixed with another type
-  		STM_EVAL_LEDToggle(led_coffee1);
-Source\main.c(146): warning:  #1-D: last line of file ends without a newline
-  }*/
-Source\main.c: 3 warnings, 0 errors
+Source\main.c(249): warning:  #1-D: last line of file ends without a newline
+  }
+Source\main.c: 1 warning, 0 errors
 linking...
-.\Output\freertos_project.axf: Error: L6218E: Undefined symbol vTimer2Callback (referred from main.o).
-.\Output\freertos_project.axf: Error: L6218E: Undefined symbol vTimer3Callback (referred from main.o).
-.\Output\freertos_project.axf: Error: L6218E: Undefined symbol vTimerButtonCallback (referred from main.o).
-Not enough information to list image symbols.
-Finished: 1 information, 0 warning and 3 error messages.
-".\Output\freertos_project.axf" - 3 Error(s), 3 Warning(s).
+Program Size: Code=18804 RO-data=488 RW-data=204 ZI-data=78788  
+FromELF: creating hex file...
+".\Output\freertos_project.axf" - 0 Error(s), 1 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -59,8 +52,7 @@ Package Vendor: ARM
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.0.0
-Target not created.
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>
