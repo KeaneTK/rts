@@ -28,17 +28,20 @@ void secondTask(void* ptr);
 void buttonPressTask(void * ptr);
 TimerHandle_t buttonTimer;
 int test = 0;
+int buttonPressed;
 
 struct TIMER_DATA {
 	int totalTime;
 	Led_TypeDef led_coffee;
-	TimerHandle_t coffeeTimer;
+	TimerHandle_t timerHandle;
 	int flagUsed;
 } typedef timer_data;
 
 timer_data timerData1;
 timer_data timerData2;
 timer_data timerData3;
+timer_data buttonData;
+
 //void Delay(uint32_t val);
 
 #define STACK_SIZE_MIN	128	/* usStackDepth	- the stack size DEFINED IN WORDS.*/
@@ -63,6 +66,9 @@ void initTimerStruct() {
 	
 	timerData3.totalTime = 0;
 	timerData3.flagUsed = 0;
+	
+	buttonData.totalTime = 750;
+	buttonData.flagUsed = 0;
 }
 
 //******************************************************************************
@@ -93,21 +99,22 @@ int main(void)
 	
 	initTimerStruct();
 	
-	xTaskCreate( secondTask, (const char*)"Mocha", STACK_SIZE_MIN, NULL, tskIDLE_PRIORITY, NULL );
+	xTaskCreate( secondTask, "Mocha", STACK_SIZE_MIN, NULL, tskIDLE_PRIORITY, NULL );
 	//xTaskCreate( buttonPressTask, (const char*)"Button", STACK_SIZE_MIN, NULL, 5, NULL);
 	xTaskCreate( prvButtonTestTask, "BtnTest", STACK_SIZE_MIN, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
 	
 	//params(char* not used, pdMS_TO_TICKS(#numberOfMilliseconds), true if you want the timer to repeat, can be used to store int values, function called after timer stops)
-	timerData1.coffeeTimer = xTimerCreate("timerCoffee1", pdMS_TO_TICKS(1000), pdTRUE, (void *) 0, vTimer1Callback);
-	timerData2.coffeeTimer = xTimerCreate("timerCoffee2", pdMS_TO_TICKS(1000), pdTRUE, (void *) 0, vTimer2Callback);
-	timerData3.coffeeTimer = xTimerCreate("timerCoffee3", pdMS_TO_TICKS(1000), pdTRUE, (void *) 0, vTimer3Callback);
+	timerData1.timerHandle = xTimerCreate("timerCoffee1", pdMS_TO_TICKS(1000), pdTRUE, (void *) 0, vTimer1Callback);
+	timerData2.timerHandle = xTimerCreate("timerCoffee2", pdMS_TO_TICKS(1000), pdTRUE, (void *) 0, vTimer2Callback);
+	timerData3.timerHandle = xTimerCreate("timerCoffee3", pdMS_TO_TICKS(1000), pdTRUE, (void *) 0, vTimer3Callback);
 	
 	xTestSemaphore = xSemaphoreCreateBinary();
 	
-	buttonTimer = xTimerCreate("timerButton", pdMS_TO_TICKS(1), pdTRUE, (void *) 0, vTimerButtonCallback);
+	buttonData.timerHandle = xTimerCreate("timerButton", pdMS_TO_TICKS(1), pdTRUE, (void *) 0, vTimerButtonCallback);
+	
 	timerData1.totalTime = TIME_CAPPACCINO;
 	timerData1.led_coffee = LED_GREEN;
-	xTimerStart(timerData1.coffeeTimer, 0); 
+	xTimerStart(timerData1.timerHandle, 0); 
 	
 	vTaskStartScheduler();
 	for(;;) {
@@ -118,15 +125,15 @@ int main(void)
 
 void secondTask(void * ptr) {
 	for(;;) {
-		if (test >= TIME_CAPPACCINO) {
+		/*if (test >= TIME_CAPPACCINO) {
 			test = 0;
 			timerData1.led_coffee = LED_ORANGE;
 			timerData1.totalTime = TIME_ESPRESSO;
-			xTimerReset(timerData1.coffeeTimer, 0);
+			xTimerReset(timerData1.timerHandle, 0);
 			timerData2.led_coffee = LED_BLUE;
 			timerData2.totalTime = TIME_CAPPACCINO;
-			xTimerReset(timerData2.coffeeTimer, 0);
-		}
+			xTimerReset(timerData2.timerHandle, 0);
+		}*/
 	}
 }
 
@@ -196,18 +203,58 @@ void vTimer3Callback( TimerHandle_t xTimer ) {
 	}
 }
 
-void vTimerButtonCallback( TimerHandle_t xTimer) {};
+
+void singleClick() {
+	
+		STM_EVAL_LEDToggle(LED_GREEN);
+}
+
+void doubleClick() {
+	
+		STM_EVAL_LEDToggle(LED_BLUE);
+}
+
+void longClick() {
+	
+		STM_EVAL_LEDToggle(LED_ORANGE);
+}
+
+void vTimerButtonCallback( TimerHandle_t xTimer) {
+	uint32_t ulCount;
+
+	ulCount = ( uint32_t ) pvTimerGetTimerID( xTimer );
+
+	ulCount++;
+	if (ulCount < buttonData.totalTime) {
+		if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0) == 1) {
+			buttonPressed++;
+		}
+		vTimerSetTimerID( xTimer, ( void * ) ulCount );
+	} else {
+		vTimerSetTimerID( xTimer, ( void * ) 0 );
+		if (buttonPressed > 500) {
+			longClick();
+		} else if (buttonData.flagUsed == 1) {
+			singleClick();
+		} else if (buttonData.flagUsed == 2) {
+			doubleClick();
+		}
+		buttonData.flagUsed = 0;
+		buttonPressed = 0;
+		xTimerStop( xTimer, 0);
+	}
+};
+
 /*xTaskCreate( prvButtonTestTask, "BtnTest", configMINIMAL_STACK_SIZE, ( void * ) NULL, tskIDLE_PRIORITY, NULL );*/
 
 // The variable that is incremented by the task synchronised with the button
 //interrupt. 
 /*volatile unsigned long ulButtonPressCounts = 0UL;*/
 
-
-static void prvButtonTestTask( void *pvParameters )
-{
-	//configASSERT( xTestSemaphore );
-
+static void prvButtonTestTask( void *pvParameters ) {
+	uint32_t ulCount;
+	int lastPress = 0;
+	
 	// This is the task used as an example of how to synchronise a task with
 	//an interrupt.  Each time the button interrupt gives the semaphore, this task
 	//will unblock, increment its execution counter, then return to block
@@ -217,22 +264,32 @@ static void prvButtonTestTask( void *pvParameters )
 	//state. 
 	xSemaphoreTake( xTestSemaphore, mainDONT_BLOCK );
 
-	for( ;; )
-	{
+	for(;;) {
 		xSemaphoreTake( xTestSemaphore, portMAX_DELAY );
-		STM_EVAL_LEDToggle(LED_BLUE);
-		ulButtonPressCounts++;
+		
+		ulCount = ( uint32_t ) pvTimerGetTimerID( buttonData.timerHandle );
+		
+		//bounce is still a thing
+		if (buttonData.flagUsed == 0) {
+			buttonPressed++;
+			lastPress = 0;
+			xTimerReset( buttonData.timerHandle, 0);
+			buttonData.flagUsed++;
+		}
+		if (ulCount - lastPress >= 150) {
+			lastPress = ulCount;
+			buttonData.flagUsed++;
+		}
 	}
 }
 
-void EXTI0_IRQHandler(void)
-{
+void EXTI0_IRQHandler(void) {
 		long lHigherPriorityTaskWoken = pdFALSE;
 
     /* Only line 6 is enabled, so there is no need to test which line generated
     the interrupt. */
     EXTI_ClearITPendingBit( EXTI_Line0 );
-
+		
     /* This interrupt does nothing more than demonstrate how to synchronise a
     task with an interrupt.  First the handler releases a semaphore.
     lHigherPriorityTaskWoken has been initialised to zero. */
