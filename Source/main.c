@@ -47,7 +47,7 @@ timer_data buttonData;
 
 #define STACK_SIZE_MIN 128 /* usStackDepth	- the stack size DEFINED IN WORDS.*/
 
-static void prvButtonTestTask(void* pvParameters);
+void prvButtonTestTask(void* pvParameters);//static
 
 static SemaphoreHandle_t xButtonSemaphore = NULL;
 
@@ -88,7 +88,7 @@ int main(void) {
     xButtonSemaphore = xSemaphoreCreateBinary();
 
     buttonData.timerHandle = xTimerCreate("timerButton", pdMS_TO_TICKS(1), pdTRUE, (void*)0, vTimerButtonCallback);
-		waitTimer = xTimerCreate("waitButton", pdMS_TO_TICKS(150), pdTRUE, (void*)0, vTimerWaitCallback);
+		waitTimer = xTimerCreate("waitButton", pdMS_TO_TICKS(75), pdTRUE, (void*)0, vTimerWaitCallback);
 
     vTaskStartScheduler();
     for (;;) {
