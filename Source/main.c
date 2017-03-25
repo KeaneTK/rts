@@ -20,23 +20,20 @@
 
 #define mainDONT_BLOCK (0UL)
 
-volatile unsigned long ulButtonPressCounts = 0UL;
-void vTimer1Callback(TimerHandle_t xTimer);
-void vTimer2Callback(TimerHandle_t xTimer);
-void vTimer3Callback(TimerHandle_t xTimer);
 void vTimerWaitCallback(TimerHandle_t xTimer);
 void vTimerButtonCallback(TimerHandle_t xTimer);
-void setLEDs(void);
+void setLED(void);
 TimerHandle_t buttonTimer;
 int selectedCoffee = 0;
 int buttonPressed;
 int waitButton = 0;
 TimerHandle_t waitTimer;
+TimerHandle_t buttonTimer;
 
 struct TIMER_DATA {
     int totalTime;
+		int currTime;
     Led_TypeDef led_coffee;
-    TimerHandle_t timerHandle;
     int flagUsed;
 } typedef timer_data;
 
@@ -47,7 +44,10 @@ timer_data buttonData;
 
 #define STACK_SIZE_MIN 128 /* usStackDepth	- the stack size DEFINED IN WORDS.*/
 
-void prvButtonTestTask(void* pvParameters);//static
+void prvButtonTestTask(void* pvParameters);
+void prvTimer1Task(void* pvParameters);
+void prvTimer2Task(void* pvParameters);
+void prvTimer3Task(void* pvParameters);
 
 static SemaphoreHandle_t xButtonSemaphore = NULL;
 
@@ -55,15 +55,19 @@ void initTimerStruct()
 {
     timerData1.totalTime = 0;
     timerData1.flagUsed = 0;
+		timerData1.currTime = 0;
 
     timerData2.totalTime = 0;
     timerData2.flagUsed = 0;
+		timerData2.currTime = 0;
 
     timerData3.totalTime = 0;
     timerData3.flagUsed = 0;
+		timerData3.currTime = 0;
 
     buttonData.totalTime = 750;
     buttonData.flagUsed = 0;
+		buttonData.currTime = 0;
 }
 
 int main(void) {
@@ -77,82 +81,81 @@ int main(void) {
     STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
 
     initTimerStruct();
-		setLEDs();
+		setLED();
 
-    xTaskCreate(prvButtonTestTask, "BtnTest", STACK_SIZE_MIN, (void*)NULL, tskIDLE_PRIORITY, NULL);
-
-    timerData1.timerHandle = xTimerCreate("timerCoffee1", pdMS_TO_TICKS(1000), pdTRUE, (void*)0, vTimer1Callback);
-    timerData2.timerHandle = xTimerCreate("timerCoffee2", pdMS_TO_TICKS(1000), pdTRUE, (void*)0, vTimer2Callback);
-    timerData3.timerHandle = xTimerCreate("timerCoffee3", pdMS_TO_TICKS(1000), pdTRUE, (void*)0, vTimer3Callback);
-		
+    xTaskCreate(prvButtonTestTask, "BtnTest", STACK_SIZE_MIN, (void*)NULL, 5, NULL);
+		xTaskCreate(prvTimer1Task, "Timer 1", STACK_SIZE_MIN, (void*)NULL, 4, NULL);
+		xTaskCreate(prvTimer2Task, "Timer 2", STACK_SIZE_MIN, (void*)NULL, 4, NULL);
+		xTaskCreate(prvTimer3Task, "Timer 3", STACK_SIZE_MIN, (void*)NULL, 4, NULL);
+	
     xButtonSemaphore = xSemaphoreCreateBinary();
 
-    buttonData.timerHandle = xTimerCreate("timerButton", pdMS_TO_TICKS(1), pdTRUE, (void*)0, vTimerButtonCallback);
-		waitTimer = xTimerCreate("waitButton", pdMS_TO_TICKS(75), pdTRUE, (void*)0, vTimerWaitCallback);
+    buttonTimer = xTimerCreate("timerButton", pdMS_TO_TICKS(1), pdTRUE, (void*)0, vTimerButtonCallback);
+		waitTimer = xTimerCreate("waitButton", pdMS_TO_TICKS(100), pdTRUE, (void*)0, vTimerWaitCallback);
 
     vTaskStartScheduler();
     for (;;) {
     }
 }
 
-void vTimer1Callback(TimerHandle_t xTimer) {
-    uint32_t ulCount;
-    timerData1.flagUsed = 1;
-
-    ulCount = (uint32_t)pvTimerGetTimerID(xTimer);
-
-    ulCount++;
-    if (ulCount >= timerData1.totalTime) {
-        STM_EVAL_LEDOff(timerData1.led_coffee);
-        timerData1.flagUsed = 0;
-        xTimerStop(xTimer, 0);
-        vTimerSetTimerID(xTimer, (void*)0);
-    }
-    else {
-        STM_EVAL_LEDToggle(timerData1.led_coffee);
-        vTimerSetTimerID(xTimer, (void*)ulCount);
-    }
+void prvTimer1Task( void* pvParameters) {
+	for (;;) {
+		if (timerData1.currTime < timerData1.totalTime) {
+			timerData1.flagUsed = 1;
+			timerData1.currTime++;
+			
+			if (timerData1.currTime >= timerData1.totalTime) {
+				setLED();
+				timerData1.flagUsed = 0;
+			} else {
+				STM_EVAL_LEDToggle(timerData1.led_coffee);
+				vTaskDelay( 1000 / portTICK_PERIOD_MS);
+			}
+		} else {
+			vTaskDelay(150 / portTICK_PERIOD_MS);
+		}
+	}
 }
 
-void vTimer2Callback(TimerHandle_t xTimer) {
-    uint32_t ulCount;
-    timerData2.flagUsed = 1;
-
-    ulCount = (uint32_t)pvTimerGetTimerID(xTimer);
-
-    ulCount++;
-    if (ulCount >= timerData2.totalTime) {
-        STM_EVAL_LEDOff(timerData2.led_coffee);
-        timerData2.flagUsed = 0;
-        xTimerStop(xTimer, 0);
-        vTimerSetTimerID(xTimer, (void*)0);
-    }
-    else {
-        STM_EVAL_LEDToggle(timerData2.led_coffee);
-        vTimerSetTimerID(xTimer, (void*)ulCount);
-    }
+void prvTimer2Task( void* pvParameters) {
+	for (;;) {
+		if (timerData2.currTime < timerData2.totalTime) {
+			timerData2.flagUsed = 1;
+			timerData2.currTime++;
+			
+			if (timerData2.currTime >= timerData2.totalTime) {
+				setLED();
+				timerData2.flagUsed = 0;
+			} else {
+				STM_EVAL_LEDToggle(timerData2.led_coffee);
+				vTaskDelay( 1000 / portTICK_PERIOD_MS);
+			}
+		} else {
+			vTaskDelay(150 / portTICK_PERIOD_MS);
+		}
+	}
 }
 
-void vTimer3Callback(TimerHandle_t xTimer) {
-    uint32_t ulCount;
-    timerData3.flagUsed = 1;
-
-    ulCount = (uint32_t)pvTimerGetTimerID(xTimer);
-
-    ulCount++;
-    if (ulCount >= timerData3.totalTime) {
-        STM_EVAL_LEDOff(timerData3.led_coffee);
-        timerData3.flagUsed = 0;
-        xTimerStop(xTimer, 0);
-        vTimerSetTimerID(xTimer, (void*)0);
-    }
-    else {
-        STM_EVAL_LEDToggle(timerData3.led_coffee);
-        vTimerSetTimerID(xTimer, (void*)ulCount);
-    }
+void prvTimer3Task( void* pvParameters) {
+	for (;;) {
+		if (timerData3.currTime < timerData3.totalTime) {
+			timerData3.flagUsed = 1;
+			timerData3.currTime++;
+			
+			if (timerData3.currTime >= timerData3.totalTime) {
+				setLED();
+				timerData3.flagUsed = 0;
+			} else {
+				STM_EVAL_LEDToggle(timerData3.led_coffee);
+				vTaskDelay( 1000 / portTICK_PERIOD_MS);
+			}
+		} else {
+			vTaskDelay(150 / portTICK_PERIOD_MS);
+		}
+	}
 }
 
-void setLEDs() {
+void setLED() {
 	STM_EVAL_LEDOff(LED_BLUE);
 	STM_EVAL_LEDOff(LED_GREEN);
 	STM_EVAL_LEDOff(LED_ORANGE);
@@ -185,6 +188,7 @@ timer_data insertData(int coffee, timer_data dataTimer) {
 			dataTimer.totalTime = TIME_CAPPACCINO;
 			break;
 	}
+	dataTimer.currTime = 0;
 	return dataTimer;
 }
 
@@ -194,30 +198,27 @@ void singleClick() {
 		selectedCoffee = 0;
 	}
 	
-	setLEDs();
+	setLED();
 }
 
 void doubleClick() {
-	xTimerStop(timerData1.timerHandle, 0);
-	xTimerStop(timerData2.timerHandle, 0);
-	xTimerStop(timerData3.timerHandle, 0);
+	timerData1.currTime = 100;
+	timerData2.currTime = 100;
+	timerData3.currTime = 100;
 	timerData1.flagUsed = 0;
 	timerData2.flagUsed = 0;
 	timerData3.flagUsed = 0;
 		
-	setLEDs();
+	setLED();
 }
 
 void longClick() {
 	if (timerData1.flagUsed == 0) {
 		timerData1 = insertData(selectedCoffee, timerData1);
-		xTimerReset(timerData1.timerHandle, 0);
 	} else if (timerData2.flagUsed == 0) {
 		timerData2 = insertData(selectedCoffee, timerData2);
-		xTimerReset(timerData2.timerHandle, 0);
 	} else if (timerData3.flagUsed == 0) {
 		timerData3 = insertData(selectedCoffee, timerData3);
-		xTimerReset(timerData3.timerHandle, 0);
 	}
 }
 
@@ -267,12 +268,12 @@ static void prvButtonTestTask(void* pvParameters) {
         xSemaphoreTake(xButtonSemaphore, portMAX_DELAY);
 
 			if (waitButton == 0) {
-        ulCount = (uint32_t)pvTimerGetTimerID(buttonData.timerHandle);
+        ulCount = (uint32_t)pvTimerGetTimerID(buttonTimer);
 
         if (buttonData.flagUsed == 0) {
             buttonPressed++;
             lastPress = 0;
-            xTimerReset(buttonData.timerHandle, 0);
+            xTimerReset(buttonTimer, 0);
             buttonData.flagUsed++;
         }
         if (ulCount - lastPress >= 150) {
