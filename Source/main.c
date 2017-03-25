@@ -49,7 +49,8 @@ void prvTimer1Task(void* pvParameters);
 void prvTimer2Task(void* pvParameters);
 void prvTimer3Task(void* pvParameters);
 
-static SemaphoreHandle_t xButtonSemaphore = NULL;
+SemaphoreHandle_t xButtonSemaphore = NULL;
+SemaphoreHandle_t xTaskSemaphore = NULL;
 
 void initTimerStruct()
 {
@@ -89,6 +90,8 @@ int main(void) {
 		xTaskCreate(prvTimer3Task, "Timer 3", STACK_SIZE_MIN, (void*)NULL, 4, NULL);
 	
     xButtonSemaphore = xSemaphoreCreateBinary();
+		xTaskSemaphore = xSemaphoreCreateBinary();
+		xSemaphoreGive(xTaskSemaphore);
 
     buttonTimer = xTimerCreate("timerButton", pdMS_TO_TICKS(1), pdTRUE, (void*)0, vTimerButtonCallback);
 		waitTimer = xTimerCreate("waitButton", pdMS_TO_TICKS(100), pdTRUE, (void*)0, vTimerWaitCallback);
@@ -101,6 +104,7 @@ int main(void) {
 void prvTimer1Task( void* pvParameters) {
 	for (;;) {
 		if (timerData1.currTime < timerData1.totalTime) {
+			xSemaphoreTake(xTaskSemaphore, portMAX_DELAY);
 			timerData1.flagUsed = 1;
 			timerData1.currTime++;
 			
@@ -111,8 +115,10 @@ void prvTimer1Task( void* pvParameters) {
 				STM_EVAL_LEDToggle(timerData1.led_coffee);
 				vTaskDelay( 1000 / portTICK_PERIOD_MS);
 			}
+				xSemaphoreGive(xTaskSemaphore);
+			vTaskDelay(2/portTICK_PERIOD_MS);
 		} else {
-			vTaskDelay(150 / portTICK_PERIOD_MS);
+			vTaskDelay(10 / portTICK_PERIOD_MS);
 		}
 	}
 }
@@ -120,6 +126,7 @@ void prvTimer1Task( void* pvParameters) {
 void prvTimer2Task( void* pvParameters) {
 	for (;;) {
 		if (timerData2.currTime < timerData2.totalTime) {
+			xSemaphoreTake(xTaskSemaphore, portMAX_DELAY);
 			timerData2.flagUsed = 1;
 			timerData2.currTime++;
 			
@@ -130,8 +137,10 @@ void prvTimer2Task( void* pvParameters) {
 				STM_EVAL_LEDToggle(timerData2.led_coffee);
 				vTaskDelay( 1000 / portTICK_PERIOD_MS);
 			}
+				xSemaphoreGive(xTaskSemaphore);
+			vTaskDelay(2/portTICK_PERIOD_MS);
 		} else {
-			vTaskDelay(150 / portTICK_PERIOD_MS);
+			vTaskDelay(10 / portTICK_PERIOD_MS);
 		}
 	}
 }
@@ -139,6 +148,7 @@ void prvTimer2Task( void* pvParameters) {
 void prvTimer3Task( void* pvParameters) {
 	for (;;) {
 		if (timerData3.currTime < timerData3.totalTime) {
+			xSemaphoreTake(xTaskSemaphore, portMAX_DELAY);
 			timerData3.flagUsed = 1;
 			timerData3.currTime++;
 			
@@ -149,8 +159,10 @@ void prvTimer3Task( void* pvParameters) {
 				STM_EVAL_LEDToggle(timerData3.led_coffee);
 				vTaskDelay( 1000 / portTICK_PERIOD_MS);
 			}
+				xSemaphoreGive(xTaskSemaphore);
+			vTaskDelay(2/portTICK_PERIOD_MS);
 		} else {
-			vTaskDelay(150 / portTICK_PERIOD_MS);
+			vTaskDelay(10 / portTICK_PERIOD_MS);
 		}
 	}
 }
