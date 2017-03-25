@@ -168,10 +168,26 @@ void prvTimer3Task( void* pvParameters) {
 }
 
 void setLED() {
-	STM_EVAL_LEDOff(LED_BLUE);
-	STM_EVAL_LEDOff(LED_GREEN);
-	STM_EVAL_LEDOff(LED_ORANGE);
-	STM_EVAL_LEDOff(LED_RED);
+	if (!((timerData1.led_coffee == LED_BLUE && timerData1.flagUsed == 1) ||
+			(timerData2.led_coffee == LED_BLUE && timerData2.flagUsed == 1) ||
+			(timerData3.led_coffee == LED_BLUE && timerData3.flagUsed == 1))) {
+				STM_EVAL_LEDOff(LED_BLUE);
+			}
+	if (!((timerData1.led_coffee == LED_GREEN && timerData1.flagUsed == 1) ||
+			(timerData2.led_coffee == LED_GREEN && timerData2.flagUsed == 1) ||
+			(timerData3.led_coffee == LED_GREEN && timerData3.flagUsed == 1))) {
+				STM_EVAL_LEDOff(LED_GREEN);
+			}
+	if (!((timerData1.led_coffee == LED_ORANGE && timerData1.flagUsed == 1) ||
+			(timerData2.led_coffee == LED_ORANGE && timerData2.flagUsed == 1) ||
+			(timerData3.led_coffee == LED_ORANGE && timerData3.flagUsed == 1))) {
+				STM_EVAL_LEDOff(LED_ORANGE);
+			}
+	if (!((timerData1.led_coffee == LED_RED && timerData1.flagUsed == 1) ||
+			(timerData2.led_coffee == LED_RED && timerData2.flagUsed == 1) ||
+			(timerData3.led_coffee == LED_RED && timerData3.flagUsed == 1))) {
+				STM_EVAL_LEDOff(LED_RED);
+			}
 	
 	switch(selectedCoffee) {
 		case 0: STM_EVAL_LEDOn(LED_GREEN); break;
@@ -201,6 +217,7 @@ timer_data insertData(int coffee, timer_data dataTimer) {
 			break;
 	}
 	dataTimer.currTime = 0;
+	STM_EVAL_LEDOff(dataTimer.led_coffee);
 	return dataTimer;
 }
 
