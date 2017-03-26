@@ -1,0 +1,24 @@
+--Pre-emptive--
+Each separate blink task doesn't overlap with any other ones running.
+Example
+Task1 ON                                              OFF
+Task2                                                  ON                                               OFF
+      0   10   20   30   40   50   60   70   80   90  100  110  120  130  140  150  160  170  180  190  200
+	     Tens of milliseconds
+
+Cooperative
+No difference
+
+--Time Slicing--
+Each separate blink task overlaps with any other ones running, keeping to it's own one second loop.  
+Example
+Task1 ON                                              OFF
+Task2                                                  ON                                               OFF
+      0   10   20   30   40   50   60   70   80   90  100  110  120  130  140  150  160  170  180  190  200
+	     Tens of milliseconds
+
+--No Time Slicing--
+No difference
+
+168 MHz vs 100 MHz
+The blinking becomes faster and the debounce timers expire sooner.
