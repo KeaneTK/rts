@@ -40,9 +40,11 @@ Led_TypeDef ledGlobalSelectedLed;
 //		Mocha: 45 seconds
 //		Latte: 40 seconds
 //		Espresso: 30 seconds
-#define TIME_MOCHA (5 * 1000)
-#define TIME_LATTE (10 * 1000)
-#define TIME_ESPRESSO (20 * 1000)
+//		Cappuccino: 60 seconds
+#define TIME_MOCHA (45 * 1000)
+#define TIME_LATTE (40 * 1000)
+#define TIME_ESPRESSO (30 * 1000)
+#define TIME_CAPP (60 * 1000)
 
 
 //How often the blinking task should CHECK if we should start blinking
@@ -58,14 +60,17 @@ void vTaskBlinkLed( void* pvLedToBlink);
 void vMochaTimerCallback( TimerHandle_t xTimer );
 void vLatteTimerCallback( TimerHandle_t xTimer );
 void vEspressoTimerCallback( TimerHandle_t xTimer );
+void vCappuccinoTimerCallback( TimerHandle_t xTimer );
 
 BaseType_t 		enableMocha;
 BaseType_t 		enableLatte;
 BaseType_t 		enableEspresso;
+BaseType_t 		enableCappucino;
 
 TimerHandle_t xTimerMocha;
 TimerHandle_t xTimerLatte;
 TimerHandle_t xTimerEspresso;
+TimerHandle_t xTimerCappuccino;
 
 #define BREWING_START 1
 #define BREWING_STOP 0
@@ -73,6 +78,7 @@ TimerHandle_t xTimerEspresso;
 void vStartMocha(void);
 void vStartLatte(void);
 void vStartEspresso(void);
+void vStartCappuccino(void);
 
 
 //***********************END variables for brewing
@@ -123,6 +129,7 @@ int main(void) {
 		Led_TypeDef mochaLed;
 		Led_TypeDef latteLed;
 		Led_TypeDef espressoLed;
+		Led_TypeDef cappLed;
 		NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
     STM_EVAL_LEDInit(LED_BLUE);
@@ -143,9 +150,12 @@ int main(void) {
 		mochaLed = LED_FOR_OPTION_MOCHA;
 		latteLed = LED_FOR_OPTION_LATTE;
 		espressoLed = LED_FOR_OPTION_ESPRESSO;
+		cappLed = LED_FOR_OPTION_NULL;
+		
 		xTaskCreate(vTaskBlinkLed, "Mocha Blinker", STACK_SIZE_MIN, (void*)&mochaLed, PRIORITY_LED_BLINKER, NULL);
 		xTaskCreate(vTaskBlinkLed, "Latte Blinker", STACK_SIZE_MIN, (void*)&latteLed, PRIORITY_LED_BLINKER, NULL);
 		xTaskCreate(vTaskBlinkLed, "Espresso Blinker", STACK_SIZE_MIN, (void*)&espressoLed, PRIORITY_LED_BLINKER, NULL);
+		xTaskCreate(vTaskBlinkLed, "Cappuccino Blinker", STACK_SIZE_MIN, (void*)&cappLed, PRIORITY_LED_BLINKER, NULL);
 		
 	
 	//create the timers that will be responsible for turning OFF blinking (brewing)
@@ -153,6 +163,7 @@ int main(void) {
 		xTimerMocha = xTimerCreate("Mocha Timer", pdMS_TO_TICKS(TIME_MOCHA), pdFALSE, (void*)0, vMochaTimerCallback);
 		xTimerLatte = xTimerCreate("Latte Timer", pdMS_TO_TICKS(TIME_LATTE), pdFALSE, (void*)0, vLatteTimerCallback);
 		xTimerEspresso = xTimerCreate("Espresso Timer", pdMS_TO_TICKS(TIME_ESPRESSO), pdFALSE, (void*)0, vEspressoTimerCallback);
+		xTimerCappuccino = xTimerCreate("Cappaccino Timer", pdMS_TO_TICKS(TIME_CAPP), pdFALSE, (void*)0, vEspressoTimerCallback);
 	
 		//enable buttons
     STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
@@ -188,7 +199,6 @@ void vTaskBlinkLed( void* pvLedToBlink) {
 	//	this pointer points to the correct variable that corresponds
 	//	to the flag which basically says "this coffee timer is brewing"
 	BaseType_t *thisLedEnableFlag;
-	char* thisTaskName = pcTaskGetName(NULL);
 	switch (thisLed) {
 		case LED_FOR_OPTION_MOCHA:
 			thisLedEnableFlag = &enableMocha;
@@ -200,8 +210,7 @@ void vTaskBlinkLed( void* pvLedToBlink) {
 			thisLedEnableFlag = &enableEspresso;
 			break;
 		case LED_FOR_OPTION_NULL:
-			//shouldnt happen
-			thisLedEnableFlag = NULL;
+			thisLedEnableFlag = &enableCappucino;
 			break;
 	}
 	
@@ -257,6 +266,10 @@ void vEspressoTimerCallback( TimerHandle_t xTimer ){
 	enableEspresso = BREWING_STOP;
 	STM_EVAL_LEDOff(LED_FOR_OPTION_ESPRESSO);
 }
+void vCappuccinoTimerCallback( TimerHandle_t xTimer ){
+	enableCappucino = BREWING_STOP;
+	STM_EVAL_LEDOff(LED_FOR_OPTION_NULL);
+}
 
 void vStartMocha(void) {
 	BaseType_t success; 
@@ -295,6 +308,17 @@ void vStartEspresso(void) {
 	}
 }
 
+void vStartCappuccino(void) {
+	BaseType_t success; 
+	
+	enableCappucino = BREWING_START;
+	//enable the timer for that duration
+	success = xTimerReset(xTimerCappuccino, 0);
+	if (success == pdPASS){
+	} else {
+			//failed to enable timer
+	}
+}
 
 //Cycle between the LEDs as defined in the header
 //	forces this LED to remain on using the created task
@@ -321,7 +345,7 @@ void vClickSingle(void) {
 void vClickDouble(void) {	
     switch (ledGlobalSelectedLed) {
 			case LED_FOR_OPTION_NULL:
-				//the currently selected LED is NULl, do nothing as this corresponds to no timer
+				vStartCappuccino();
 				break;
 			case LED_FOR_OPTION_MOCHA:
 				//reset/start the timer that corresponds to the mocha
@@ -343,7 +367,7 @@ void vClickDouble(void) {
 void vClickLong(void) {
     switch (ledGlobalSelectedLed) {
 			case LED_FOR_OPTION_NULL:
-				//the currently selected LED is NULL, do nothing as this corresponds to no timer
+				enableCappucino = BREWING_STOP;
 				break;
 			case LED_FOR_OPTION_MOCHA:
 				//reset/start the timer that corresponds to the mocha
